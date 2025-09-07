@@ -1,0 +1,15 @@
+{
+  "services": {
+    "web": {
+      "buildCommand": "pnpm install && pnpm build",
+      "startCommand": "pnpm start",
+      "envs": [
+        { "key": "DATABASE_URL", "required": true },
+        { "key": "DASHBOARD_TOKEN", "required": true }
+      ]
+    },
+    "postgres": {
+      "plan": "starter"
+    }
+  }
+}
