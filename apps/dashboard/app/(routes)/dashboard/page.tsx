@@ -1,5 +1,5 @@
-import { db } from '../../lib/db';
-import { ProjectCard } from '../../components/ProjectCard';
+import { db } from '../../../lib/db';
+import { ProjectCard } from '../../../components/ProjectCard';
 import React from 'react';
 import Link from 'next/link';
 

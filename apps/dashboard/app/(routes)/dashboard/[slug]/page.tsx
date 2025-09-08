@@ -1,6 +1,6 @@
-import { db } from '../../../lib/db';
-import { RepoCard } from '../../../components/RepoCard';
-import { FindingCard } from '../../../components/FindingCard';
+import { db } from '../../../../lib/db';
+import { RepoCard } from '../../../../components/RepoCard';
+import { FindingCard } from '../../../../components/FindingCard';
 import React from 'react';
 import Link from 'next/link';
 
