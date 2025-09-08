@@ -1,0 +1,80 @@
+// Prisma schema for audit dashboard
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          String   @id
+  name        String
+  createdAt   DateTime @default(now())
+  repos       Repo[]
+  auditRuns   AuditRun[]
+}
+
+model Repo {
+  id        String   @id
+  project   Project  @relation(fields: [projectId], references: [id])
+  projectId String
+  url       String
+  provider  String
+}
+
+model AuditRun {
+  id         String   @id
+  project    Project  @relation(fields: [projectId], references: [id])
+  projectId  String
+  startedAt  DateTime
+  finishedAt DateTime?
+  status     String
+  findings   Finding[]
+  patchPlans PatchPlan[]
+}
+
+model Finding {
+  id         String   @id
+  auditRun   AuditRun @relation(fields: [auditRunId], references: [id])
+  auditRunId String
+  type       String
+  severity   String
+  message    String
+  file       String
+  line       Int
+  patchPlans PatchPlan[]
+}
+
+model PatchPlan {
+  id         String   @id
+  finding    Finding  @relation(fields: [findingId], references: [id])
+  findingId  String
+  auditRun   AuditRun? @relation(fields: [auditRunId], references: [id])
+  auditRunId String?
+  description String
+  status     String
+}
+
+model SecretsMeta {
+  id        String   @id
+  key       String  @unique
+  value     String
+  createdAt DateTime @default(now())
+}
+
+model Integration {
+  id        String   @id
+  type      String
+  config    String
+  createdAt DateTime @default(now())
+}
+
+model Module {
+  id        String   @id
+  name      String
+  config    String
+  createdAt DateTime @default(now())
+}
