@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Upsert project
-  const project = await prisma.project.upsert({
+  await prisma.project.upsert({
     where: { slug: 'dev-dashboard' },
     update: {},
     create: {
@@ -21,7 +21,7 @@ async function main() {
   });
 
   // Upsert repo
-  const repo = await prisma.repo.upsert({
+  await prisma.repo.upsert({
     where: { fullName: 'myboss/dev-dashboard' },
     update: {},
     create: {
@@ -32,7 +32,7 @@ async function main() {
   });
 
   // Upsert audit_run
-  const auditRun = await prisma.auditRun.upsert({
+  await prisma.auditRun.upsert({
     where: { commitSha: 'abc123def456' },
     update: {},
     create: {

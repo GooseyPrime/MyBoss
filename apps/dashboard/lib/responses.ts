@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 
-export function ok(data: any) {
+export function ok(data: unknown) {
   return NextResponse.json(data, { status: 200 });
 }
 
-export function badRequest(zodError: any) {
+export function badRequest(zodError: unknown) {
   return NextResponse.json({ error: 'bad request', details: zodError }, { status: 400 });
 }
 
-export function server(error: any) {
+export function server(error: unknown) {
   return NextResponse.json({ error: 'server error', details: String(error) }, { status: 500 });
 }

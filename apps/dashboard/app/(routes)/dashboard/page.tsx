@@ -12,6 +12,13 @@ interface Repo {
   defaultBranch?: string | null;
 }
 
+interface ProjectWithRepos {
+  id: string;
+  name: string;
+  slug: string;
+  repos: Repo[];
+}
+
 interface Project {
   id: string;
   name: string;
@@ -36,8 +43,8 @@ async function getProjectsWithLatestAudit(): Promise<Project[]> {
   });
 
   // For each project, get the latest audit run and findings summary
-  const results = await Promise.all(projects.map(async (project: any) => {
-    const repoIds = project.repos.map((r: any) => r.id);
+  const results = await Promise.all(projects.map(async (project: ProjectWithRepos) => {
+    const repoIds = project.repos.map((r: Repo) => r.id);
     const latestAudit = await db.auditRun.findFirst({
       where: { repoId: { in: repoIds } },
       orderBy: { startedAt: 'desc' },
