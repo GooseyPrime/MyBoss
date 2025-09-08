@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   let data;
   try {
     data = await req.json();
-  } catch (e) {
+  } catch {
     return badRequest('Invalid JSON');
   }
   const parsed = AuditSchema.safeParse(data);

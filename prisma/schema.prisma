@@ -25,18 +25,21 @@ model Repo {
   fullName      String   @unique
   defaultBranch String?
   type          String?
+  url           String?
+  provider      String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   audits        AuditRun[]
 }
 
 model AuditRun {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   repoId     String
-  repo       Repo     @relation(fields: [repoId], references: [id], onDelete: Cascade)
-  commitSha  String   @unique
+  repo       Repo      @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  commitSha  String    @unique
   status     String
-  startedAt  DateTime @default(now())
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
   rawJson    Json?
   findings   Finding[]
   patchPlans PatchPlan[]

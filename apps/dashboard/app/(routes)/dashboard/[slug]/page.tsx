@@ -3,10 +3,57 @@ import { RepoCard } from '../../../../components/RepoCard';
 import { FindingCard } from '../../../../components/FindingCard';
 import React from 'react';
 import Link from 'next/link';
+import { JsonValue } from '@prisma/client/runtime/library';
+
+// Force dynamic rendering to avoid database connection during build
+export const dynamic = 'force-dynamic';
 
 interface Params { params: { slug: string } }
 
-async function getProjectDetail(slug: string) {
+interface Repo {
+  id: string;
+  fullName: string;
+  defaultBranch?: string | null;
+}
+
+interface Finding {
+  id: string;
+  kind: string;
+  title: string;
+  severity: string;
+  fileRefs: string[];
+  detail: JsonValue;
+}
+
+interface PatchPlan {
+  id: string;
+  rank: number;
+  why: string;
+  files: string[];
+  diff: string;
+  rollback: string;
+}
+
+interface AuditRun {
+  id: string;
+  commitSha: string;
+  status: string;
+  startedAt: Date;
+  findings: Finding[];
+  patchPlans: PatchPlan[];
+}
+
+interface ProjectWithDetails {
+  id: string;
+  name: string;
+  slug: string;
+  repos: Repo[];
+  audits: AuditRun[];
+  activeWorkTime: string;
+  actionableLinks: { label: string; url: string }[];
+}
+
+async function getProjectDetail(slug: string): Promise<ProjectWithDetails | null> {
   const project = await db.project.findUnique({
     where: { slug },
     include: {
@@ -15,7 +62,7 @@ async function getProjectDetail(slug: string) {
   });
   if (!project) return null;
   // Get all audits for all repos in this project
-  const repoIds = project.repos.map((r: any) => r.id);
+  const repoIds = project.repos.map((r: Repo) => r.id);
   const audits = await db.auditRun.findMany({
     where: { repoId: { in: repoIds } },
     orderBy: { startedAt: 'desc' },
@@ -32,7 +79,7 @@ async function getProjectDetail(slug: string) {
     { label: 'Open Issues', url: 'https://github.com/myboss/dev-dashboard/issues' },
     // Add more links or dynamic integration here
   ];
-  return { ...project, audits, activeWorkTime, actionableLinks };
+  return { ...project, audits: audits as AuditRun[], activeWorkTime, actionableLinks };
 }
 
 export default async function ProjectDetailPage({ params }: Params) {
@@ -45,14 +92,14 @@ export default async function ProjectDetailPage({ params }: Params) {
       </div>
       <h1 className="text-3xl font-bold text-white mb-4">{project.name}</h1>
       <div className="mb-6 flex flex-wrap gap-2">
-        {project.repos.map((repo: any) => <RepoCard key={repo.id} repo={repo} />)}
+        {project.repos.map((repo: Repo) => <RepoCard key={repo.id} repo={repo} />)}
       </div>
       <div className="mb-4 flex gap-6">
         <div className="text-xs text-gray-400">Active Work Time: <span className="text-green-300 font-mono">{project.activeWorkTime}</span></div>
       </div>
       <h2 className="text-xl text-white font-semibold mb-2">Audit Runs</h2>
       <div className="space-y-8">
-        {project.audits.map((audit: any) => (
+        {project.audits.map((audit: AuditRun) => (
           <div key={audit.id} className="rounded-xl border border-gray-700 bg-gradient-to-br from-gray-900 to-black p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-gray-200 font-mono text-sm">Commit: {audit.commitSha}</span>
@@ -75,12 +122,12 @@ export default async function ProjectDetailPage({ params }: Params) {
               <div>
                 <h3 className="text-gray-300 font-semibold mb-1">Findings</h3>
                 {audit.findings.length === 0 && <div className="text-gray-500 text-xs">No findings</div>}
-                {audit.findings.map((finding: any) => <FindingCard key={finding.id} finding={finding} />)}
+                {audit.findings.map((finding: Finding) => <FindingCard key={finding.id} finding={finding} />)}
               </div>
               <div>
                 <h3 className="text-gray-300 font-semibold mb-1">Patch Plans</h3>
                 {audit.patchPlans.length === 0 && <div className="text-gray-500 text-xs">No patch plans</div>}
-                {audit.patchPlans.map((plan: any) => (
+                {audit.patchPlans.map((plan: PatchPlan) => (
                   <div key={plan.id} className="rounded-lg bg-gray-900 border border-gray-700 p-4 mb-2">
                     <div className="text-xs text-gray-400 mb-1">Rank: {plan.rank}</div>
                     <div className="text-xs text-gray-400 mb-1">Why: {plan.why}</div>

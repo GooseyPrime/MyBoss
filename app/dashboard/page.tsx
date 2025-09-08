@@ -1,6 +1,9 @@
 import { query } from '../../lib/db';
 import Link from 'next/link';
 
+// Force dynamic rendering to avoid database connection during build
+export const dynamic = 'force-dynamic';
+
 interface ProjectRow {
   id: string;
   name: string;

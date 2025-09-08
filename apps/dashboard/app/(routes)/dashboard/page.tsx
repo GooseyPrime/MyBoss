@@ -3,10 +3,20 @@ import { ProjectCard } from '../../../components/ProjectCard';
 import React from 'react';
 import Link from 'next/link';
 
+// Force dynamic rendering to avoid database connection during build
+export const dynamic = 'force-dynamic';
+
 interface Repo {
   id: string;
   fullName: string;
   defaultBranch?: string | null;
+}
+
+interface ProjectWithRepos {
+  id: string;
+  name: string;
+  slug: string;
+  repos: Repo[];
 }
 
 interface Project {
@@ -33,8 +43,8 @@ async function getProjectsWithLatestAudit(): Promise<Project[]> {
   });
 
   // For each project, get the latest audit run and findings summary
-  const results = await Promise.all(projects.map(async (project: any) => {
-    const repoIds = project.repos.map((r: any) => r.id);
+  const results = await Promise.all(projects.map(async (project: ProjectWithRepos) => {
+    const repoIds = project.repos.map((r: Repo) => r.id);
     const latestAudit = await db.auditRun.findFirst({
       where: { repoId: { in: repoIds } },
       orderBy: { startedAt: 'desc' },

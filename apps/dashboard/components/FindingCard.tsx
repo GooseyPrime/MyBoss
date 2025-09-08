@@ -1,4 +1,5 @@
 import React from 'react';
+import { JsonValue } from '@prisma/client/runtime/library';
 
 interface Finding {
   id: string;
@@ -6,7 +7,7 @@ interface Finding {
   title: string;
   severity: string;
   fileRefs: string[];
-  detail: any;
+  detail: JsonValue;
 }
 
 interface FindingCardProps {
