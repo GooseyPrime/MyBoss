@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       take: 10,
     });
     const result = await upsertNotionProjectsAndFindings(projects, findings);
-    return ok({ ok: true, ...result });
+    return ok({ success: true, ...result });
   } catch (e) {
     return server('Notion sync failed: ' + String(e));
   }
