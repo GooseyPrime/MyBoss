@@ -47,7 +47,7 @@ export async function checkServerRunning(url: string = HEALTH_CHECK_URL): Promis
   return false;
 }
 
-export function startServer(): Promise<{ process: any; stop: () => void; wasAlreadyRunning: boolean }> {
+export function startServer(dashboardToken?: string): Promise<{ process: any; stop: () => void; wasAlreadyRunning: boolean }> {
   return new Promise(async (resolve, reject) => {
     // First check if server is already running
     const alreadyRunning = await checkServerRunning();
@@ -68,6 +68,8 @@ export function startServer(): Promise<{ process: any; stop: () => void; wasAlre
       env: { 
         ...process.env,
         PORT: String(DEFAULT_PORT),
+        // Pass through the dashboard token if provided
+        DASHBOARD_TOKEN: dashboardToken || process.env.DASHBOARD_TOKEN || 'devtoken',
         // Use in-memory SQLite for testing if no DATABASE_URL is set
         DATABASE_URL: process.env.DATABASE_URL || 'file::memory:?cache=shared'
       }

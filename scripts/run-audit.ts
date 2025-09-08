@@ -52,14 +52,36 @@ const audit: AuditJson = {
 audit.findings[0].audit_run_id = audit.audit_run.id;
 audit.patch_plans[0].finding_id = audit.findings[0].id;
 
-const outPath = path.join(__dirname, '../audit.json');
+// Parse CLI arguments
+function parseArgs(): { api?: string; token?: string; out?: string } {
+    const args = process.argv.slice(2);
+    const parsed: { api?: string; token?: string; out?: string } = {};
+    
+    for (const arg of args) {
+        if (arg.startsWith('--api=')) {
+            parsed.api = arg.split('=')[1].replace(/"/g, '');
+        } else if (arg.startsWith('--token=')) {
+            parsed.token = arg.split('=')[1].replace(/"/g, '');
+        } else if (arg.startsWith('--out=')) {
+            parsed.out = arg.split('=')[1].replace(/"/g, '');
+        }
+    }
+    
+    return parsed;
+}
+
+const cliArgs = parseArgs();
+
+// Write audit.json (support CLI --out argument)
+const outPath = path.join(__dirname, '../', cliArgs.out || 'audit.json');
 fs.writeFileSync(outPath, JSON.stringify(audit, null, 2));
-console.log('Wrote audit.json');
+console.log(`Wrote ${cliArgs.out || 'audit.json'}`);
 
 // POST to /api/ingest
 (async () => {
-    const DASHBOARD_TOKEN = process.env.DASHBOARD_TOKEN || 'devtoken';
-    const url = process.env.INGEST_URL || 'http://localhost:3000/api/ingest';
+    // Support both CLI arguments and environment variables
+    const DASHBOARD_TOKEN = cliArgs.token || process.env.DASHBOARD_TOKEN || 'devtoken';
+    const url = cliArgs.api || process.env.INGEST_URL || 'http://localhost:3000/api/ingest';
     
     let serverStop: (() => void) | null = null;
     let startedServer = false;
@@ -72,7 +94,7 @@ console.log('Wrote audit.json');
             console.log('🔧 Local environment detected, ensuring server is available...');
             
             // Start the server (or detect if already running)
-            const { stop, wasAlreadyRunning } = await startServer();
+            const { stop, wasAlreadyRunning } = await startServer(DASHBOARD_TOKEN);
             serverStop = stop;
             startedServer = !wasAlreadyRunning;
             
