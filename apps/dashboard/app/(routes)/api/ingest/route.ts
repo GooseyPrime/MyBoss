@@ -3,7 +3,7 @@ import { requireBearer } from '../../../../lib/auth';
 import { ok, badRequest, server } from '../../../../lib/responses';
 import { AuditSchema } from '../../../../../../packages/shared/types/audit';
 import { db } from '../../../../lib/db';
-import { notifySlack } from '../../../../lib/slack';
+import { notifyFinding } from '../../../../lib/slack';
 
 export async function POST(req: NextRequest) {
   // Auth
@@ -94,14 +94,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Slack notification for high severity
-    if (process.env.SLACK_WEBHOOK_URL) {
-      const hasHigh = audit.findings.some(f => f.severity === 'high') ||
-        (audit.findings.some(f => f.type === 'compliance' && f.severity === 'high'));
-      if (hasHigh) {
-        await notifySlack(`🚨 High severity finding in project ${project.name} (${audit.audit_run.id})`);
-      }
-    }
+  // Slack notification for high severity
+  // Pass compliance if present in rawJson, else null
+  await notifyFinding(audit.audit_run.id, audit.findings, null);
 
     return ok({ ok: true, audit_run_id: auditRun.id });
   } catch (e) {

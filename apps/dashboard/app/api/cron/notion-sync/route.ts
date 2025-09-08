@@ -1,4 +1,11 @@
+
 import { NextRequest } from 'next/server';
+import { db } from '@/lib/db';
+import { ok, badRequest, server } from '@/lib/responses';
+import { upsertNotionProjectsAndFindings } from '@/lib/notion';
+
+// In-memory rate limit for Notion sync (1/min)
+let lastSync = 0;
 
 export async function POST(req: NextRequest) {
   const envs = [
@@ -9,10 +16,28 @@ export async function POST(req: NextRequest) {
   ];
   for (const key of envs) {
     if (!process.env[key]) {
-      return Response.json({ ok: false, reason: 'Notion env missing' });
+      return badRequest('Notion env missing');
     }
   }
-  // TODO: Upsert latest projects + top findings to Notion, rate limit 1/min
-  // For now, just return no-op
-  return Response.json({ ok: true, synced: 0 });
+  const now = Date.now();
+  if (now - lastSync < 60_000) {
+    return badRequest('Rate limit: 1 sync per minute');
+  }
+  lastSync = now;
+  try {
+    // Get latest projects and top findings
+    const projects = await db.project.findMany({
+      select: { id: true, name: true, slug: true },
+      orderBy: { updatedAt: 'desc' },
+      take: 10,
+    });
+    const findings = await db.finding.findMany({
+      orderBy: { severity: 'desc' },
+      take: 10,
+    });
+    const result = await upsertNotionProjectsAndFindings(projects, findings);
+    return ok({ ok: true, ...result });
+  } catch (e) {
+    return server('Notion sync failed: ' + String(e));
+  }
 }

@@ -92,3 +92,26 @@ model Module {
   config    String
   createdAt DateTime @default(now())
 }
+
+model Thread {
+  id        String   @id @default(cuid())
+  provider  String
+  title     String?
+  createdAt DateTime @default(now())
+  messages  Message[]
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  threadId  String
+  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author    String
+  role      String
+  content   String
+  ts        DateTime
+  meta      Json?
+  createdAt DateTime @default(now())
+  @@index([threadId])
+  @@index([author])
+  @@index([role])
+}
