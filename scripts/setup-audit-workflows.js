@@ -23,7 +23,7 @@ jobs:
           node-version: '20'
       - run: npm i -g pnpm@9
       - run: pnpm install --frozen-lockfile
-      - run: node scripts/run-audit.js --api=\"$DASHBOARD_API\" --token=\"$DASHBOARD_TOKEN\" --out=audit.json
+      - run: pnpm exec tsx scripts/run-audit.ts --api=\"$DASHBOARD_API\" --token=\"$DASHBOARD_TOKEN\" --out=audit.json
       - uses: actions/upload-artifact@v4
         with:
           name: audit.json

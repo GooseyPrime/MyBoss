@@ -15,7 +15,7 @@ railway init && railway up
 - Postgres client (`lib/db.ts`)
 - Types for audit.json (`packages/shared/types/audit.ts`)
 - Minimal UI: list projects, latest audit status
-- `scripts/run-audit.js` for local/CI audit and ingest
+- `scripts/run-audit.ts` for local/CI audit and ingest
 - GitHub Action for push + nightly audit
 
 ## Railway services
@@ -65,7 +65,7 @@ railway init && railway up
 - Postgres client (`lib/db.ts`)
 - Types for audit.json (`packages/shared/types/audit.ts`)
 - Minimal UI: list projects, latest audit status
-- `scripts/run-audit.js` for local/CI audit and ingest
+- `scripts/run-audit.ts` for local/CI audit and ingest
 - GitHub Action for push + nightly audit
 
 ## Railway services
