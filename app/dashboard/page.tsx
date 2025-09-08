@@ -1,6 +1,9 @@
 import { query } from '../../lib/db';
 import Link from 'next/link';
 
+// Disable static rendering for this page since it needs database access
+export const dynamic = 'force-dynamic';
+
 interface ProjectRow {
   id: string;
   name: string;

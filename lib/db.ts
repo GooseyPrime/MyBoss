@@ -5,5 +5,5 @@ const pool = new Pool({
   // You can add more options here if needed
 });
 
-export const query = (text: string, params?: any[]) => pool.query(text, params);
+export const query = (text: string, params?: unknown[]) => pool.query(text, params);
 export default pool;
