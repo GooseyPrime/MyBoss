@@ -16,6 +16,7 @@ model Project {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   repos     Repo[]
+  health    ProjectHealth?
 }
 
 model Repo {
@@ -27,9 +28,19 @@ model Repo {
   type          String?
   url           String?
   provider      String?
+  // New fields for general project tracking
+  buildStatus   String?  // "passing", "failing", "unknown"
+  lastBuildAt   DateTime?
+  openPrCount   Int      @default(0)
+  openIssueCount Int     @default(0)
+  healthScore   Float?   // 0-100 score for overall repo health
+  isArchived    Boolean  @default(false)
+  
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   audits        AuditRun[]
+  buildRuns     BuildRun[]
+  actionPlans   ActionPlan[]
 }
 
 model AuditRun {
@@ -114,4 +125,71 @@ model Message {
   @@index([threadId])
   @@index([author])
   @@index([role])
+}
+
+// New models for general project tracking
+
+model BuildRun {
+  id          String    @id @default(cuid())
+  repoId      String
+  repo        Repo      @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  commitSha   String
+  status      String    // "success", "failure", "in_progress", "cancelled"
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+  duration    Int?      // in seconds
+  buildTool   String?   // "npm", "pnpm", "yarn", "gradle", etc.
+  errorLog    String?
+  artifacts   Json?     // artifact metadata
+  
+  @@index([repoId, startedAt(sort: Desc)])
+  @@index([status])
+}
+
+model ActionPlan {
+  id          String      @id @default(cuid())
+  repoId      String?
+  repo        Repo?       @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  projectId   String?     // Can be associated with project instead of specific repo
+  title       String
+  description String?
+  status      String      @default("open") // "open", "in_progress", "completed", "cancelled"
+  priority    String      @default("medium") // "high", "medium", "low"
+  category    String      @default("general") // "security", "build", "dependency", "feature", etc.
+  assignee    String?
+  dueDate     DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  tasks       ActionTask[]
+  
+  @@index([status])
+  @@index([priority])
+  @@index([category])
+}
+
+model ActionTask {
+  id          String      @id @default(cuid())
+  planId      String
+  plan        ActionPlan  @relation(fields: [planId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  status      String      @default("todo") // "todo", "in_progress", "done"
+  order       Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  @@index([planId, order])
+}
+
+model ProjectHealth {
+  id            String   @id @default(cuid())
+  projectId     String   @unique
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  overallScore  Float    @default(0) // 0-100
+  buildScore    Float    @default(0)
+  securityScore Float    @default(0)
+  codeQuality   Float    @default(0)
+  activity      Float    @default(0)
+  lastUpdated   DateTime @default(now())
+  metrics       Json?    // Additional metrics storage
 }
