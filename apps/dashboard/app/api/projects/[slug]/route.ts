@@ -53,9 +53,9 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
     }
 
     // Section extraction from rawJson or fallback
-    let sections: Record<string, any> = {};
+    let sections: Record<string, unknown> = {};
     if (latestAudit && latestAudit.rawJson) {
-      const raw = latestAudit.rawJson as Record<string, any>;
+      const raw = latestAudit.rawJson as Record<string, unknown>;
       for (const key of [
         'overview','build_run','env_map','ci','dev_only','data_layer','security','cost','patch_plan','forecast','compliance']) {
         if (raw[key]) sections[key] = raw[key];

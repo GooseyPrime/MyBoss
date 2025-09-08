@@ -10,6 +10,10 @@ interface Repo {
   id: string;
   fullName: string;
   defaultBranch?: string | null;
+  buildStatus?: string | null;
+  openPrCount?: number;
+  openIssueCount?: number;
+  healthScore?: number | null;
 }
 
 interface ProjectWithRepos {
@@ -17,6 +21,11 @@ interface ProjectWithRepos {
   name: string;
   slug: string;
   repos: Repo[];
+  health?: {
+    overallScore: number;
+    buildScore: number;
+    securityScore: number;
+  } | null;
 }
 
 interface Project {
@@ -24,6 +33,11 @@ interface Project {
   name: string;
   slug: string;
   repos: Repo[];
+  health?: {
+    overallScore: number;
+    buildScore: number;
+    securityScore: number;
+  } | null;
   latestAudit?: {
     status: string;
     startedAt: string;
@@ -37,7 +51,24 @@ async function getProjectsWithLatestAudit(): Promise<Project[]> {
   // Query all projects with their repos and latest audit run
   const projects = await db.project.findMany({
     include: {
-      repos: true,
+      repos: {
+        select: {
+          id: true,
+          fullName: true,
+          defaultBranch: true,
+          buildStatus: true,
+          openPrCount: true,
+          openIssueCount: true,
+          healthScore: true,
+        }
+      },
+      health: {
+        select: {
+          overallScore: true,
+          buildScore: true,
+          securityScore: true,
+        }
+      },
     },
     orderBy: { name: 'asc' },
   });
@@ -73,11 +104,20 @@ export default async function DashboardPage() {
   const projects = await getProjectsWithLatestAudit();
   return (
     <div className="min-h-screen bg-black px-8 py-10">
-      <h1 className="text-4xl font-bold text-white mb-8">Project Audits</h1>
+      <h1 className="text-4xl font-bold text-white mb-8">Project Dashboard</h1>
+      <p className="text-gray-400 mb-6">
+        Monitor project health, build status, security audits, and action plans across all your repositories.
+      </p>
       <div className="max-w-4xl mx-auto">
         {projects.map((project: Project) => (
           <Link key={project.id} href={`/dashboard/${project.slug}`} className="block hover:scale-[1.01] transition-transform">
-            <ProjectCard name={project.name} slug={project.slug} repos={project.repos} latestAudit={project.latestAudit} />
+            <ProjectCard 
+              name={project.name} 
+              slug={project.slug} 
+              repos={project.repos} 
+              latestAudit={project.latestAudit}
+              health={project.health || undefined}
+            />
           </Link>
         ))}
       </div>
