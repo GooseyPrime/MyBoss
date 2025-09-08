@@ -1,5 +1,3 @@
-// Prisma schema for audit dashboard
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,70 +8,83 @@ datasource db {
 }
 
 model Project {
-  id          String   @id
-  name        String
-  createdAt   DateTime @default(now())
-  repos       Repo[]
-  auditRuns   AuditRun[]
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  provider  String?
+  url       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  repos     Repo[]
 }
 
 model Repo {
-  id        String   @id
-  project   Project  @relation(fields: [projectId], references: [id])
-  projectId String
-  url       String
-  provider  String
+  id            String   @id @default(cuid())
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  fullName      String   @unique
+  defaultBranch String?
+  type          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  audits        AuditRun[]
 }
 
 model AuditRun {
-  id         String   @id
-  project    Project  @relation(fields: [projectId], references: [id])
-  projectId  String
-  startedAt  DateTime
-  finishedAt DateTime?
+  id         String   @id @default(cuid())
+  repoId     String
+  repo       Repo     @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  commitSha  String   @unique
   status     String
+  startedAt  DateTime @default(now())
+  rawJson    Json?
   findings   Finding[]
   patchPlans PatchPlan[]
+  @@index([repoId, startedAt(sort: Desc)])
 }
 
 model Finding {
-  id         String   @id
-  auditRun   AuditRun @relation(fields: [auditRunId], references: [id])
-  auditRunId String
-  type       String
-  severity   String
-  message    String
-  file       String
-  line       Int
-  patchPlans PatchPlan[]
+  id        String   @id @default(cuid())
+  auditId   String
+  audit     AuditRun @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  kind      String
+  title     String
+  severity  String
+  fileRefs  String[]
+  detail    Json
+  createdAt DateTime @default(now())
+  @@index([auditId])
+  @@index([severity])
 }
 
 model PatchPlan {
-  id         String   @id
-  finding    Finding  @relation(fields: [findingId], references: [id])
-  findingId  String
-  auditRun   AuditRun? @relation(fields: [auditRunId], references: [id])
-  auditRunId String?
-  description String
-  status     String
+  id        String   @id @default(cuid())
+  auditId   String
+  audit     AuditRun @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  rank      Int
+  why       String
+  files     String[]
+  diff      String
+  rollback  String
+  createdAt DateTime @default(now())
 }
 
 model SecretsMeta {
-  id        String   @id
+  id        String   @id @default(cuid())
   key       String  @unique
   value     String
   createdAt DateTime @default(now())
 }
 
 model Integration {
-  id        String   @id
+  id        String   @id @default(cuid())
   type      String
   config    String
   createdAt DateTime @default(now())
 }
 
 model Module {
-  id        String   @id
+  id        String   @id @default(cuid())
   name      String
   config    String
   createdAt DateTime @default(now())
