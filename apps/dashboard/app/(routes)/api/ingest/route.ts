@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
-import { requireBearer } from '../../../lib/auth';
-import { ok, badRequest, server } from '../../../lib/responses';
+import { requireBearer } from '../../../../lib/auth';
+import { ok, badRequest, server } from '../../../../lib/responses';
 import { AuditSchema } from '../../../../../../packages/shared/types/audit';
-import { db } from '../../../lib/db';
-import { notifySlack } from '../../../lib/slack';
+import { db } from '../../../../lib/db';
+import { notifySlack } from '../../../../lib/slack';
 
 export async function POST(req: NextRequest) {
   // Auth
