@@ -4,6 +4,9 @@ import { FindingCard } from '../../../../components/FindingCard';
 import React from 'react';
 import Link from 'next/link';
 
+// Force dynamic rendering to avoid database connection during build
+export const dynamic = 'force-dynamic';
+
 interface Params { params: { slug: string } }
 
 async function getProjectDetail(slug: string) {
