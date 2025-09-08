@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const client = await query('BEGIN');
+  await query('BEGIN');
   try {
     // Upsert project
     await query(
