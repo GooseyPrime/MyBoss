@@ -1,7 +1,6 @@
 #!/usr/bin/env tsx
 import fs from 'fs';
 import path from 'path';
-import fetch from 'node-fetch';
 import { v4 as uuidv4 } from 'uuid';
 import type { AuditJson } from '../packages/shared/types/audit';
 
