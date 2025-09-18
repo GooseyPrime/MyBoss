@@ -124,7 +124,7 @@ export function GitHubRepoSelector({ onReposSelected }: GitHubRepoSelectorProps)
           </button>
         </div>
         <p className="text-xs text-gray-400 mt-1">
-          Requires 'repo' and 'workflow' scopes to fetch repositories and set up audit workflows
+          Requires &apos;repo&apos; and &apos;workflow&apos; scopes to fetch repositories and set up audit workflows
         </p>
         <div className="flex items-center mt-2">
           <input

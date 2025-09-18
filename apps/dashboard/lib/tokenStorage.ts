@@ -77,7 +77,7 @@ export class TokenStorage {
 
       const stored: StoredToken = JSON.parse(storedData);
       return stored.expiry || null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }

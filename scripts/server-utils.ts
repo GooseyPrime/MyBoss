@@ -18,7 +18,7 @@ export async function waitForHealth(url: string = HEALTH_CHECK_URL, maxRetries: 
           return true;
         }
       }
-    } catch (error) {
+    } catch {
       // Server not ready yet, continue waiting
     }
     
@@ -41,13 +41,13 @@ export async function checkServerRunning(url: string = HEALTH_CHECK_URL): Promis
         return true;
       }
     }
-  } catch (error) {
+  } catch {
     // Server not running
   }
   return false;
 }
 
-export function startServer(dashboardToken?: string): Promise<{ process: any; stop: () => void; wasAlreadyRunning: boolean }> {
+export function startServer(dashboardToken?: string): Promise<{ process: unknown; stop: () => void; wasAlreadyRunning: boolean }> {
   return new Promise(async (resolve, reject) => {
     // First check if server is already running
     const alreadyRunning = await checkServerRunning();

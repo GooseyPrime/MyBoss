@@ -1,6 +1,5 @@
 import { db } from '../../../lib/db';
 import { ProjectCard } from '../../../components/ProjectCard';
-import { DashboardClient } from '../../../components/DashboardClient';
 import React from 'react';
 import Link from 'next/link';
 
@@ -49,37 +48,30 @@ interface Project {
 }
 
 async function getProjectsWithLatestAudit(): Promise<Project[]> {
-  // Query all projects with their repos and latest audit run
-  const projects = await db.project.findMany({
-    include: {
-      repos: {
-        select: {
-          id: true,
-          fullName: true,
-          defaultBranch: true,
-          buildStatus: true,
-          openPrCount: true,
-          openIssueCount: true,
-          healthScore: true,
-        }
+  try {
+    // Query all projects with their repos and latest audit run
+    const projects = await db.project.findMany({
+      include: {
+        repos: {
+          select: {
+            id: true,
+            fullName: true,
+            defaultBranch: true,
+            buildStatus: true,
+            openPrCount: true,
+            openIssueCount: true,
+            healthScore: true,
+          }
+        },
+        health: {
+          select: {
+            overallScore: true,
+            buildScore: true,
+            securityScore: true,
+          }
+        },
       },
-      health: {
-        select: {
-          overallScore: true,
-          buildScore: true,
-          securityScore: true,
-        }
-      },
-    },
-    orderBy: { name: 'asc' },
-  });
-
-  // For each project, get the latest audit run and findings summary
-  const results = await Promise.all(projects.map(async (project: ProjectWithRepos) => {
-    const repoIds = project.repos.map((r: Repo) => r.id);
-    const latestAudit = await db.auditRun.findFirst({
-      where: { repoId: { in: repoIds } },
-      orderBy: { startedAt: 'desc' },
+      orderBy: { name: 'asc' },
     });
 
     // For each project, get the latest audit run and findings summary
