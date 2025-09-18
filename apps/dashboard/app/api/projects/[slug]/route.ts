@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
         repos: {
           select: {
             id: true,
-            name: true,
+            fullName: true,
             audits: {
               orderBy: { startedAt: 'desc' },
               take: 1,
@@ -53,9 +53,9 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
     }
 
     // Section extraction from rawJson or fallback
-    let sections = {};
+    let sections: any = {};
     if (latestAudit && latestAudit.rawJson) {
-      const raw = latestAudit.rawJson;
+      const raw = latestAudit.rawJson as any;
       for (const key of [
         'overview','build_run','env_map','ci','dev_only','data_layer','security','cost','patch_plan','forecast','compliance']) {
         if (raw[key]) sections[key] = raw[key];
@@ -89,7 +89,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
       const audit = repo.audits[0];
       return {
         id: repo.id,
-        name: repo.name,
+        fullName: repo.fullName,
         latestAudit: audit
           ? { id: audit.id, startedAt: audit.startedAt, status: audit.status }
           : null,
