@@ -1,5 +1,6 @@
 import { db } from '../../../lib/db';
 import { ProjectCard } from '../../../components/ProjectCard';
+import { DashboardClient } from '../../../components/DashboardClient';
 import React from 'react';
 import Link from 'next/link';
 
@@ -80,24 +81,37 @@ async function getProjectsWithLatestAudit(): Promise<Project[]> {
       where: { repoId: { in: repoIds } },
       orderBy: { startedAt: 'desc' },
     });
-    let findingsCount = 0, p0Count = 0, p1Count = 0;
-    if (latestAudit) {
-      findingsCount = await db.finding.count({ where: { auditId: latestAudit.id } });
-      p0Count = await db.finding.count({ where: { auditId: latestAudit.id, severity: 'high' } });
-      p1Count = await db.finding.count({ where: { auditId: latestAudit.id, severity: 'medium' } });
-    }
-    return {
-      ...project,
-      latestAudit: latestAudit ? {
-        status: latestAudit.status,
-        startedAt: latestAudit.startedAt.toISOString(),
-        findingsCount,
-        p0Count,
-        p1Count,
-      } : undefined,
-    };
-  }));
-  return results as Project[];
+
+    // For each project, get the latest audit run and findings summary
+    const results = await Promise.all(projects.map(async (project: ProjectWithRepos) => {
+      const repoIds = project.repos.map((r: Repo) => r.id);
+      const latestAudit = await db.auditRun.findFirst({
+        where: { repoId: { in: repoIds } },
+        orderBy: { startedAt: 'desc' },
+      });
+      let findingsCount = 0, p0Count = 0, p1Count = 0;
+      if (latestAudit) {
+        findingsCount = await db.finding.count({ where: { auditId: latestAudit.id } });
+        p0Count = await db.finding.count({ where: { auditId: latestAudit.id, severity: 'high' } });
+        p1Count = await db.finding.count({ where: { auditId: latestAudit.id, severity: 'medium' } });
+      }
+      return {
+        ...project,
+        latestAudit: latestAudit ? {
+          status: latestAudit.status,
+          startedAt: latestAudit.startedAt.toISOString(),
+          findingsCount,
+          p0Count,
+          p1Count,
+        } : undefined,
+      };
+    }));
+    return results as Project[];
+  } catch (error) {
+    console.error('Database error:', error);
+    // Return empty array if database is not available
+    return [];
+  }
 }
 
 export default async function DashboardPage() {

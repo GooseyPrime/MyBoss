@@ -40,7 +40,9 @@ railway init && railway up
 
 ## Features
 - **Next.js Dashboard** at `/dashboard` - Modern web interface for viewing audit results
+- **GitHub Repository Setup** - Interactive setup for automated audits of GitHub repositories
 - **API Ingest Endpoint** at `/api/ingest` - Secure endpoint for receiving audit data
+- **Make.com Integration** - Webhook support for triggering audits via Make.com
 - **PostgreSQL Database** - Centralized storage for audit results and metadata
 - **Automated Audits** - GitHub Actions integration for continuous security monitoring
 - **Multi-Repository Support** - Manage audits across your entire organization
@@ -177,16 +179,32 @@ Findings are categorized by severity:
 ## 🏗️ Repository Management
 
 ### Adding New Repositories
-Use the setup script to add audit workflows to new repositories:
+You can now use the dashboard interface to add audit workflows to new repositories:
 
-```bash
-# Set environment variables
-export GITHUB_TOKEN="your-github-pat"
-export DASHBOARD_TOKEN="your-dashboard-token"
+1. **Dashboard Method** (Recommended):
+   - Go to `/dashboard` in your MyBoss application
+   - Use the "GitHub Repository Audit Setup" section
+   - Enter your GitHub Personal Access Token (requires `repo` and `workflow` scopes)
+   - Select repositories from GooseyPrime and InTellMe organizations
+   - Click "Setup Audits" to automatically configure workflows and secrets
 
-# Run setup script (prompts if env vars not set)
-node scripts/setup-audit-workflows.js
-```
+2. **Script Method** (Legacy):
+   ```bash
+   # Set environment variables
+   export GITHUB_TOKEN="your-github-pat"
+   export DASHBOARD_TOKEN="your-dashboard-token"
+   
+   # Run setup script (prompts if env vars not set)
+   node scripts/setup-audit-workflows.js
+   ```
+
+The dashboard method provides a better user experience with:
+- Token security (stored locally with expiration)
+- Real-time repository selection
+- Visual feedback and error handling
+- Integration with Make.com webhooks
+
+For detailed setup instructions, see [GITHUB_AUDIT_SETUP.md](./GITHUB_AUDIT_SETUP.md).
 
 This script will:
 1. Add `.github/workflows/audit.yml` to each repository
@@ -465,6 +483,107 @@ Content-Type: application/json
   "audit_run_id": "unique-run-id"
 }
 ```
+
+### POST /api/github/repos
+Fetch GitHub repositories for GooseyPrime and InTellMe organizations.
+
+**Request Body:**
+```json
+{
+  "token": "ghp_your_github_personal_access_token"
+}
+```
+
+**Response:**
+```json
+{
+  "repos": [
+    {
+      "id": 123456789,
+      "name": "MyBoss",
+      "full_name": "GooseyPrime/MyBoss",
+      "default_branch": "main",
+      "private": false,
+      "description": "Security audit dashboard"
+    }
+  ],
+  "count": 1
+}
+```
+
+### POST /api/github/audit
+Set up GitHub Actions workflows for selected repositories.
+
+**Request Body:**
+```json
+{
+  "repos": [
+    {
+      "id": 123456789,
+      "name": "MyBoss",
+      "full_name": "GooseyPrime/MyBoss",
+      "default_branch": "main",
+      "private": false
+    }
+  ],
+  "token": "ghp_your_github_personal_access_token",
+  "dashboardToken": "your_dashboard_api_token"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "project": {
+    "id": "project-id",
+    "name": "GitHub Audit 2025-01-27",
+    "slug": "github-audit-1738012345"
+  },
+  "setupCount": 1,
+  "errorCount": 0,
+  "results": [
+    {
+      "repo": "GooseyPrime/MyBoss",
+      "success": true,
+      "workflowUrl": "https://github.com/GooseyPrime/MyBoss/actions/workflows/audit.yml"
+    }
+  ]
+}
+```
+
+### POST /api/webhooks/makecom
+Trigger audit workflows via Make.com webhook.
+
+**Request Body:**
+```json
+{
+  "repos": ["GooseyPrime/MyBoss", "InTellMe/SomeRepo"],
+  "token": "ghp_your_github_personal_access_token",
+  "dashboardToken": "your_dashboard_api_token",
+  "projectId": "optional_project_id"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Make.com webhook processed",
+  "triggered": 2,
+  "errorCount": 0,
+  "results": [
+    {
+      "repo": "GooseyPrime/MyBoss",
+      "success": true,
+      "triggered": true
+    }
+  ]
+}
+```
+
+### GET /api/webhooks/makecom
+Get webhook documentation and configuration details for Make.com integration.
 
 ## 🔧 Configuration
 
