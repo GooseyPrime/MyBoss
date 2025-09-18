@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DASHBOARD_TOKEN: ${{ secrets.DASHBOARD_TOKEN }}
+      DASHBOARD_API: ${{ secrets.DASHBOARD_API }}
       INGEST_URL: ${{ secrets.INGEST_URL }}
     steps:
       - uses: actions/checkout@v4
@@ -20,8 +21,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: pnpm install
-      - run: pnpm exec tsx scripts/run-audit.ts
+      - run: pnpm install --frozen-lockfile
+      - name: Run audit
+        run: |
+          # Use DASHBOARD_API if set, otherwise INGEST_URL, otherwise localhost
+          API_URL="${DASHBOARD_API:-${INGEST_URL:-http://localhost:3000/api/ingest}}"
+          pnpm exec tsx scripts/run-audit.ts --api="$API_URL" --token="$DASHBOARD_TOKEN" --out=audit.json
       - uses: actions/upload-artifact@v4
         with:
           name: audit-json
