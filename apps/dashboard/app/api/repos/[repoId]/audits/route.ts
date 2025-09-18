@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { ok, badRequest, server } from '@/lib/responses';
+import { ok, server } from '@/lib/responses';
 
 // GET /api/repos/[repoId]/audits?cursor=&limit=
 export async function GET(req: NextRequest, { params }: { params: { repoId: string } }) {
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest, { params }: { params: { repoId: stri
       audits: result,
       nextCursor: hasNext ? items[items.length - 1].id : null,
     });
-  } catch (e) {
+  } catch {
     return server('Failed to fetch audits');
   }
 }

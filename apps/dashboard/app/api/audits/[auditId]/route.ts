@@ -43,7 +43,7 @@ export async function GET(req: NextRequest, { params }: { params: { auditId: str
       patchPlans: audit.patchPlans,
       rawJson: audit.rawJson || undefined,
     });
-  } catch (e) {
+  } catch {
     return server('Failed to fetch audit');
   }
 }

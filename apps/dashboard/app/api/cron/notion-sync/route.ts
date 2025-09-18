@@ -1,5 +1,4 @@
 
-import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { ok, badRequest, server } from '@/lib/responses';
 import { upsertNotionProjectsAndFindings } from '@/lib/notion';
@@ -7,7 +6,7 @@ import { upsertNotionProjectsAndFindings } from '@/lib/notion';
 // In-memory rate limit for Notion sync (1/min)
 let lastSync = 0;
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   const envs = [
     'NOTION_TOKEN',
     'NOTION_DATABASE_ID',

@@ -2,7 +2,6 @@
 // Usage: node scripts/setup-audit-workflows.js
 // Prompts for GitHub PAT and dashboard token, then sets up audit workflow and secrets in all GooseyPrime repos (except dashboard)
 
-
 const readline = require('readline');
 const fetch = require('node-fetch');
 const { execSync } = require('child_process');

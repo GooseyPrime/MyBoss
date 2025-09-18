@@ -42,12 +42,10 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
 
     // Find the latest audit across all repos
     let latestAudit = null;
-    let latestRepo = null;
     for (const repo of project.repos) {
       if (repo.audits.length > 0) {
         if (!latestAudit || new Date(repo.audits[0].startedAt) > new Date(latestAudit.startedAt)) {
           latestAudit = repo.audits[0];
-          latestRepo = repo;
         }
       }
     }
@@ -108,7 +106,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
       findings,
       findingsNextCursor,
     });
-  } catch (e) {
+  } catch {
     return server('Failed to fetch project details');
   }
 }

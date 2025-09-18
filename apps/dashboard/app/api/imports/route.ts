@@ -5,6 +5,26 @@ import { checkRateLimit } from '@/lib/rate';
 import { ok, badRequest, server } from '@/lib/responses';
 import unzipper from 'unzipper';
 
+interface RawMessage {
+  author?: string;
+  user?: string;
+  name?: string;
+  role?: string;
+  type?: string;
+  content?: string;
+  text?: string;
+  message?: string;
+  ts?: string | number;
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+interface RawThread {
+  title?: string;
+  thread_title?: string;
+  messages?: RawMessage[];
+  [key: string]: string | number | boolean | null | undefined | RawMessage[];
+}
+
 function parseProvider(provider: string | null): string | null {
   if (!provider) return null;
   provider = provider.toLowerCase();
@@ -15,17 +35,16 @@ function parseProvider(provider: string | null): string | null {
 async function parseMultipart(req: NextRequest) {
   const contentType = req.headers.get('content-type') || '';
   if (!contentType.startsWith('multipart/form-data')) return null;
-  // @ts-ignore
   const formData = await req.formData();
   const provider = parseProvider(formData.get('provider') as string);
   const file = formData.get('file');
   return { provider, file };
 }
 
-async function extractJsonFromZip(file: File): Promise<any[]> {
+async function extractJsonFromZip(file: File): Promise<unknown[]> {
   const buffer = Buffer.from(await file.arrayBuffer());
   const zip = await unzipper.Open.buffer(buffer);
-  const jsons: any[] = [];
+  const jsons: unknown[] = [];
   for (const entry of zip.files) {
     if (entry.path.endsWith('.json')) {
       const content = await entry.buffer();
@@ -37,31 +56,31 @@ async function extractJsonFromZip(file: File): Promise<any[]> {
   return jsons;
 }
 
-async function normalizeAndStore(provider: string, data: any[]): Promise<{threads: number, messages: number}> {
+async function normalizeAndStore(provider: string, data: unknown[]): Promise<{threads: number, messages: number}> {
   let threads = 0, messages = 0;
   for (const raw of data) {
     // Normalize: expect {thread, messages[]} or array of messages
-    let threadTitle = raw.title || raw.thread_title || null;
-    let msgs = Array.isArray(raw.messages) ? raw.messages : Array.isArray(raw) ? raw : [];
+    const threadData = raw as RawThread;
+    const threadTitle = threadData.title || threadData.thread_title || null;
+    const msgs = Array.isArray(threadData.messages) ? threadData.messages : Array.isArray(raw) ? raw as RawMessage[] : [];
     if (!msgs.length) continue;
-    const thread = await db.thread.create({
+    await db.thread.create({
       data: {
         provider,
         title: threadTitle,
         messages: {
-          create: msgs.map((m: any) => ({
+          create: msgs.map((m: RawMessage) => ({
             author: m.author || m.user || m.name || 'unknown',
             role: m.role || m.type || 'user',
             content: m.content || m.text || m.message || '',
             ts: m.ts ? new Date(m.ts) : new Date(),
-            meta: m,
+            meta: JSON.parse(JSON.stringify(m)), // Convert to JSON serializable
           })),
         },
       },
-      include: { messages: true },
     });
     threads++;
-    messages += thread.messages.length;
+    messages += msgs.length;
   }
   return { threads, messages };
 }
@@ -76,7 +95,7 @@ export async function POST(req: NextRequest) {
     if (!parsed || !parsed.provider || !parsed.file) {
       return badRequest('Missing provider or file');
     }
-    let datas: any[] = [];
+    let datas: unknown[] = [];
     if ((parsed.file as File).name.endsWith('.zip')) {
       datas = await extractJsonFromZip(parsed.file as File);
     } else if ((parsed.file as File).name.endsWith('.json')) {
