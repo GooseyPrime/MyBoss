@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useGitHubToken } from '../lib/tokenStorage';
 
 interface GitHubRepo {
   id: number;
@@ -16,12 +17,27 @@ interface GitHubRepoSelectorProps {
 }
 
 export function GitHubRepoSelector({ onReposSelected }: GitHubRepoSelectorProps) {
-  const [token, setToken] = useState('');
+  const { token, setToken, clearToken, isStored } = useGitHubToken();
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
   const [selectedRepos, setSelectedRepos] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showToken, setShowToken] = useState(false);
+  const [rememberToken, setRememberToken] = useState(isStored);
+
+  const handleTokenChange = (value: string) => {
+    setToken(value, rememberToken);
+  };
+
+  const handleRememberChange = (remember: boolean) => {
+    setRememberToken(remember);
+    if (token && remember) {
+      setToken(token, true);
+    } else if (!remember) {
+      clearToken();
+      setToken(token, false);
+    }
+  };
 
   const fetchRepos = async () => {
     if (!token.trim()) {
@@ -95,7 +111,7 @@ export function GitHubRepoSelector({ onReposSelected }: GitHubRepoSelectorProps)
             id="github-token"
             type={showToken ? 'text' : 'password'}
             value={token}
-            onChange={(e) => setToken(e.target.value)}
+            onChange={(e) => handleTokenChange(e.target.value)}
             placeholder="ghp_..."
             className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
@@ -110,6 +126,18 @@ export function GitHubRepoSelector({ onReposSelected }: GitHubRepoSelectorProps)
         <p className="text-xs text-gray-400 mt-1">
           Requires 'repo' and 'workflow' scopes to fetch repositories and set up audit workflows
         </p>
+        <div className="flex items-center mt-2">
+          <input
+            id="remember-token"
+            type="checkbox"
+            checked={rememberToken}
+            onChange={(e) => handleRememberChange(e.target.checked)}
+            className="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+          />
+          <label htmlFor="remember-token" className="ml-2 text-sm text-gray-300">
+            Remember token securely (expires in 24 hours)
+          </label>
+        </div>
       </div>
 
       {/* Fetch Button */}

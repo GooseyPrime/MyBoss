@@ -84,6 +84,21 @@ export async function POST(req: NextRequest) {
       try {
         console.log(`Setting up audit for: ${repo.full_name}`);
 
+        // Validate repository access first
+        const repoCheckResponse = await fetch(`https://api.github.com/repos/${repo.full_name}`, {
+          headers
+        });
+
+        if (!repoCheckResponse.ok) {
+          if (repoCheckResponse.status === 404) {
+            throw new Error(`Repository not found or no access: ${repo.full_name}`);
+          }
+          if (repoCheckResponse.status === 403) {
+            throw new Error(`Access denied to repository: ${repo.full_name}`);
+          }
+          throw new Error(`Failed to access repository: ${repoCheckResponse.status}`);
+        }
+
         // Create repo record in database
         const dbRepo = await db.repo.create({
           data: {
@@ -138,7 +153,14 @@ export async function POST(req: NextRequest) {
         });
 
         if (!workflowRes.ok) {
-          throw new Error(`Failed to create workflow: ${workflowRes.status}`);
+          const errorBody = await workflowRes.text();
+          if (workflowRes.status === 403) {
+            throw new Error(`Insufficient permissions to create workflow. Please ensure token has 'workflow' scope.`);
+          }
+          if (workflowRes.status === 422) {
+            throw new Error(`Invalid workflow configuration. Please check repository settings.`);
+          }
+          throw new Error(`Failed to create workflow (${workflowRes.status}): ${errorBody}`);
         }
 
         // Set up repository secrets
@@ -147,7 +169,10 @@ export async function POST(req: NextRequest) {
         });
 
         if (!publicKeyRes.ok) {
-          throw new Error(`Failed to get public key: ${publicKeyRes.status}`);
+          if (publicKeyRes.status === 403) {
+            throw new Error(`Insufficient permissions to manage repository secrets. Please ensure token has 'repo' scope with full access.`);
+          }
+          throw new Error(`Failed to get public key for secrets (${publicKeyRes.status})`);
         }
 
         const publicKey = await publicKeyRes.json();
@@ -161,7 +186,7 @@ export async function POST(req: NextRequest) {
             // Use the existing encryption script
             const encrypted = execSync(`cd /home/runner/work/MyBoss/MyBoss && node ./scripts/gh-encrypt.js "${publicKey.key}" "${value}"`).toString().trim();
             
-            await fetch(`https://api.github.com/repos/${repo.full_name}/actions/secrets/${key}`, {
+            const secretRes = await fetch(`https://api.github.com/repos/${repo.full_name}/actions/secrets/${key}`, {
               method: 'PUT',
               headers: { ...headers, 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -169,6 +194,10 @@ export async function POST(req: NextRequest) {
                 key_id: publicKey.key_id,
               }),
             });
+
+            if (!secretRes.ok) {
+              console.error(`Failed to set secret ${key} for ${repo.full_name}: ${secretRes.status}`);
+            }
           } catch (secretError) {
             console.error(`Failed to set secret ${key} for ${repo.full_name}:`, secretError);
             // Continue with other secrets
