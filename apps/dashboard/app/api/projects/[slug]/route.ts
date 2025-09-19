@@ -42,20 +42,18 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
 
     // Find the latest audit across all repos
     let latestAudit = null;
-    let latestRepo = null;
     for (const repo of project.repos) {
       if (repo.audits.length > 0) {
         if (!latestAudit || new Date(repo.audits[0].startedAt) > new Date(latestAudit.startedAt)) {
           latestAudit = repo.audits[0];
-          latestRepo = repo;
         }
       }
     }
 
     // Section extraction from rawJson or fallback
-    let sections: any = {};
+    let sections: Record<string, unknown> = {};
     if (latestAudit && latestAudit.rawJson) {
-      const raw = latestAudit.rawJson as any;
+      const raw = latestAudit.rawJson as Record<string, unknown>;
       for (const key of [
         'overview','build_run','env_map','ci','dev_only','data_layer','security','cost','patch_plan','forecast','compliance']) {
         if (raw[key]) sections[key] = raw[key];
@@ -89,7 +87,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
       const audit = repo.audits[0];
       return {
         id: repo.id,
-        fullName: repo.fullName,
+        name: repo.fullName,
         latestAudit: audit
           ? { id: audit.id, startedAt: audit.startedAt, status: audit.status }
           : null,
@@ -108,7 +106,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
       findings,
       findingsNextCursor,
     });
-  } catch (e) {
+  } catch {
     return server('Failed to fetch project details');
   }
 }

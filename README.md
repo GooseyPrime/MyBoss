@@ -1,8 +1,34 @@
-# MyBoss - Security Audit Dashboard
+# MyBoss - Project Status and Action Planner
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/GooseyPrime/MyBoss&plugins=postgresql)
 
-MyBoss is a centralized security audit dashboard that automatically collects, analyzes, and displays security findings from multiple repositories. It provides a unified view of your organization's security posture with automated audit workflows and intelligent patch recommendations.
+MyBoss is a comprehensive project status and action planning dashboard that monitors repository health, tracks build status, manages security audits, and coordinates team action plans. It provides a unified view of your project ecosystem with automated monitoring workflows and intelligent planning capabilities.
+
+## 🚀 Features
+
+### 📊 Project Health Monitoring
+- **Build Status Tracking**: Monitor CI/CD pipeline health across repositories
+- **Repository Metrics**: Track open PRs, issues, and overall repo activity
+- **Health Scoring**: Automated health metrics for quick project assessment
+- **Multi-Repository Support**: Aggregate status across multiple repos per project
+
+### 🔒 Security Audit Integration
+- **Automated Security Scans**: Continuous security monitoring via GitHub Actions
+- **Vulnerability Tracking**: Categorized findings with severity levels (P0, P1, P2)
+- **Patch Planning**: AI-generated remediation suggestions with diff previews
+- **Compliance Monitoring**: Track security compliance requirements
+
+### 📋 Action Planning & Task Management
+- **Action Plans**: Create and track project improvement initiatives
+- **Task Breakdown**: Organize work into manageable, trackable tasks
+- **Priority Management**: High/Medium/Low priority categorization
+- **Category Organization**: Security, Build, Dependencies, Features, and more
+- **Progress Tracking**: Visual progress indicators and completion status
+
+### 🔄 Automated Workflows
+- **CI Integration**: GitHub Actions for continuous monitoring
+- **Data Ingestion**: Automated collection of build and audit data
+- **Real-time Updates**: Live dashboard updates as projects evolve
 
 ## Quick Deploy
 
@@ -73,19 +99,20 @@ pnpm start
 
 ## 🔧 Daily Operations
 
-### Monitoring Dashboard
+### Project Dashboard
 Access your dashboard at `https://your-domain.railway.app/dashboard` to:
-- View latest audit results across all repositories
-- Monitor security findings by severity level
-- Track audit run success/failure rates
-- Review patch plan recommendations
-- **Set up new GitHub repository audits** - Use the interactive setup tool
-- **Configure Make.com webhooks** - Integrate with automation workflows
+- **Project Overview**: Monitor project health scores and build status
+- **Repository Status**: Track open PRs, issues, and recent activity
+- **Security Audits**: Review latest security findings and patch plans
+- **Action Plans**: Manage ongoing improvement initiatives and tasks
+- **Build Monitoring**: Track CI/CD pipeline health across repositories
 
 ### Health Checks
 Monitor these key metrics:
 - **Database Connectivity**: Check PostgreSQL connection status
 - **API Endpoint**: Test `/api/ingest` responds to authenticated requests
+- **Build Status**: Verify repositories show current build states
+- **Data Freshness**: Ensure project metrics are updating regularly
 - **Audit Frequency**: Ensure repositories are running scheduled audits
 - **Finding Trends**: Watch for increases in high-severity findings
 

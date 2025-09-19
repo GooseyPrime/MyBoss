@@ -33,15 +33,6 @@ jobs:
 
 const DASHBOARD_API = 'https://myboss.up.railway.app/api/ingest';
 
-interface GitHubRepo {
-  id: number;
-  name: string;
-  full_name: string;
-  default_branch: string;
-  private: boolean;
-  description?: string;
-}
-
 export async function POST(req: NextRequest) {
   try {
     const { repos, token, dashboardToken } = await req.json();
