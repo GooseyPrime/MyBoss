@@ -63,13 +63,19 @@ railway init && railway up
 ## 🚀 Initial Setup & Deployment
 
 ### Environment Variables
-Configure these required environment variables:
+Configure these environment variables:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host:5432/myboss` |
 | `DASHBOARD_TOKEN` | Shared secret for API authentication | `your-secure-token-here` |
-| `INGEST_URL` | API endpoint for CI integration | `https://myboss.up.railway.app/api/ingest` |
+| `INGEST_URL` | Optional override for the ingest callback URL used by audit runners and setup tooling | `http://localhost:3000/api/ingest` |
+
+Copy the example env file and edit it for your environment:
+
+```bash
+cp .env.example .env
+```
 
 ### Railway Deployment
 1. Click the Railway deploy button above
@@ -85,7 +91,7 @@ cd MyBoss
 pnpm install
 
 # Configure environment
-cp .env.template .env
+cp .env.example .env
 # Edit .env with your values
 
 # Database setup
@@ -100,7 +106,7 @@ pnpm start
 ## 🔧 Daily Operations
 
 ### Project Dashboard
-Access your dashboard at `https://your-domain.railway.app/dashboard` to:
+Access your dashboard at `/dashboard` on whatever URL you use to reach MyBoss (localhost, an internal hostname, or a public URL) to:
 - **Project Overview**: Monitor project health scores and build status
 - **Repository Status**: Track open PRs, issues, and recent activity
 - **Security Audits**: Review latest security findings and patch plans
@@ -185,6 +191,7 @@ You can now use the dashboard interface to add audit workflows to new repositori
    - Go to `/dashboard` in your MyBoss application
    - Use the "GitHub Repository Audit Setup" section
    - Enter your GitHub Personal Access Token (requires `repo` and `workflow` scopes)
+   - If no GitHub token is stored yet, the dashboard shows a setup message instead of waiting on a repository request
    - Select repositories from GooseyPrime and InTellMe organizations
    - Click "Setup Audits" to automatically configure workflows and secrets
 
@@ -203,6 +210,8 @@ The dashboard method provides a better user experience with:
 - Real-time repository selection
 - Visual feedback and error handling
 - Integration with Make.com webhooks
+
+If you do not set `INGEST_URL`, the dashboard setup flow uses the current MyBoss origin and `/api/ingest`. A public custom domain is optional; use any reachable URL that matches how your audit runners should call back into MyBoss.
 
 For detailed setup instructions, see [GITHUB_AUDIT_SETUP.md](./GITHUB_AUDIT_SETUP.md).
 
@@ -335,7 +344,7 @@ Set up monitoring for:
 pnpm install
 
 # Set up environment
-cp .env.template .env
+cp .env.example .env
 # Configure your local database and tokens
 
 # Run database migrations

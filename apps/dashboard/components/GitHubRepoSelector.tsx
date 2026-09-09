@@ -97,13 +97,15 @@ export function GitHubRepoSelector({ onReposSelected }: GitHubRepoSelectorProps)
     }
   };
 
+  const missingToken = !token.trim();
+
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 mb-8">
-      <h2 className="text-2xl font-bold text-white mb-4">GitHub Repository Audit Setup</h2>
+    <div className="border rounded-lg p-6 mb-8" style={{ background: 'linear-gradient(180deg, rgba(18, 24, 38, 0.98), rgba(10, 14, 22, 0.98))', borderColor: 'rgba(74, 90, 122, 0.38)' }}>
+      <h2 className="text-2xl font-bold text-white mb-4" style={{ fontFamily: '"Fraunces", Georgia, serif' }}>GitHub Repository Audit Setup</h2>
       
       {/* Token Input */}
       <div className="mb-6">
-        <label htmlFor="github-token" className="block text-sm font-medium text-gray-300 mb-2">
+        <label htmlFor="github-token" className="block text-sm font-medium text-gray-300 mb-2" style={{ color: '#D7E0F2' }}>
           GitHub Personal Access Token
         </label>
         <div className="relative">
@@ -113,7 +115,8 @@ export function GitHubRepoSelector({ onReposSelected }: GitHubRepoSelectorProps)
             value={token}
             onChange={(e) => handleTokenChange(e.target.value)}
             placeholder="ghp_..."
-            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none"
+            style={{ background: '#101726', border: '1px solid rgba(74, 90, 122, 0.4)' }}
           />
           <button
             type="button"
@@ -123,7 +126,7 @@ export function GitHubRepoSelector({ onReposSelected }: GitHubRepoSelectorProps)
             {showToken ? '👁️' : '👁️‍🗨️'}
           </button>
         </div>
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-gray-400 mt-1" style={{ color: '#9AA5BD' }}>
           Requires &apos;repo&apos; and &apos;workflow&apos; scopes to fetch repositories and set up audit workflows
         </p>
         <div className="flex items-center mt-2">
@@ -140,13 +143,22 @@ export function GitHubRepoSelector({ onReposSelected }: GitHubRepoSelectorProps)
         </div>
       </div>
 
+      {missingToken && (
+        <div className="rounded-lg p-4 mb-4" style={{ background: 'rgba(74, 90, 122, 0.18)', border: '1px solid rgba(74, 90, 122, 0.4)' }}>
+          <p className="text-sm m-0" style={{ color: '#D7E0F2' }}>
+            Add a GitHub token to load repositories. Until then, the setup tool stays idle and shows this message instead of waiting on a request.
+          </p>
+        </div>
+      )}
+
       {/* Fetch Button */}
       <button
         onClick={fetchRepos}
         disabled={loading || !token.trim()}
-        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg mb-4"
+        className="disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg mb-4"
+        style={{ background: missingToken ? '#49566f' : '#4A5A7A' }}
       >
-        {loading ? 'Fetching Repositories...' : 'Fetch GooseyPrime & InTellMe Repositories'}
+        {loading ? 'Fetching Repositories...' : missingToken ? 'Add a GitHub token to load repositories' : 'Fetch GooseyPrime & InTellMe Repositories'}
       </button>
 
       {/* Error Display */}

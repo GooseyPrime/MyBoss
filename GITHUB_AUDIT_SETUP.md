@@ -37,6 +37,7 @@ Navigate to the dashboard at `/dashboard` in your MyBoss application.
 ### 2. GitHub Repository Selection
 
 1. **Enter GitHub Token**: Paste your GitHub Personal Access Token in the token field
+   - If no token is entered yet, the dashboard shows a setup message and stays idle instead of hanging on a repository request
 2. **Remember Token** (Optional): Check the box to securely store the token for 24 hours
 3. **Fetch Repositories**: Click the button to load repositories from GooseyPrime and InTellMe organizations
 4. **Select Repositories**: Choose which repositories you want to audit
@@ -49,6 +50,8 @@ For each selected repository, the system will:
 - Create/update a `.github/workflows/audit.yml` workflow file
 - Set up repository secrets (`DASHBOARD_API` and `DASHBOARD_TOKEN`)
 - Create a database record for tracking audit runs
+
+If `INGEST_URL` is set on MyBoss, that value is used for `DASHBOARD_API`. Otherwise the setup flow uses the same origin you are currently using to access MyBoss and appends `/api/ingest`. A public custom domain is optional.
 
 ### 4. Verify Setup
 
@@ -129,6 +132,10 @@ The workflow:
 - Enter a dashboard token when prompted
 - For development, any string like "dev-token" will work
 - For production, use the actual dashboard API token
+
+**"Audits post to the wrong URL"**
+- Set `INGEST_URL` to the exact callback endpoint the workflow runner should use
+- If `INGEST_URL` is not set, MyBoss uses the origin of the dashboard request plus `/api/ingest`
 
 ### Token Security
 

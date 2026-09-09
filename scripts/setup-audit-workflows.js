@@ -30,8 +30,6 @@ jobs:
 `;
 
 const OWNER = 'GooseyPrime';
-const DASHBOARD_API = 'https://myboss.up.railway.app/api/ingest';
-
 function prompt(query) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     return new Promise(resolve => rl.question(query, ans => { rl.close(); resolve(ans); }));
@@ -40,6 +38,7 @@ function prompt(query) {
 async function main() {
     const GITHUB_TOKEN = process.env.GITHUB_TOKEN || await prompt('GitHub PAT (repo/workflow scopes): ');
     const DASHBOARD_TOKEN = process.env.DASHBOARD_TOKEN || await prompt('Dashboard token: ');
+    const DASHBOARD_API = process.env.INGEST_URL || process.env.DASHBOARD_API || await prompt('Dashboard ingest URL (for example http://localhost:3000/api/ingest): ');
 
     const headers = { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' };
     // 1. List all repos
