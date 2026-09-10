@@ -31,11 +31,14 @@ jobs:
           path: audit.json
 `;
 
-const DASHBOARD_API = 'https://myboss.up.railway.app/api/ingest';
+function getDashboardApi(req: NextRequest): string {
+  return process.env.INGEST_URL || new URL('/api/ingest', req.nextUrl.origin).toString();
+}
 
 export async function POST(req: NextRequest) {
   try {
     const { repos, token, dashboardToken } = await req.json();
+    const dashboardApi = getDashboardApi(req);
 
     if (!repos || !Array.isArray(repos) || repos.length === 0) {
       return NextResponse.json({ error: 'Repositories array is required' }, { status: 400 });
@@ -170,7 +173,7 @@ export async function POST(req: NextRequest) {
 
         // Set secrets using the encryption script
         for (const [key, value] of [
-          ['DASHBOARD_API', DASHBOARD_API],
+          ['DASHBOARD_API', dashboardApi],
           ['DASHBOARD_TOKEN', dashboardToken],
         ]) {
           try {

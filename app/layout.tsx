@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MyBoss Dashboard",
-  description: "Project audit dashboard",
+  title: "MyBoss Project Status Dashboard",
+  description: "Internal project and repository status dashboard",
 };
 
 export default function RootLayout({

@@ -46,6 +46,13 @@ async function getProjectsWithLatestAudit(): Promise<Project[]> {
     // For each project, get the latest audit run and findings summary
     const results = await Promise.all(projects.map(async (project: ProjectWithRepos) => {
       const repoIds = project.repos.map((r: Repo) => r.id);
+      if (repoIds.length === 0) {
+        return {
+          ...project,
+          latestAudit: undefined,
+        };
+      }
+
       const latestAudit = await db.auditRun.findFirst({
         where: { repoId: { in: repoIds } },
         orderBy: { startedAt: 'desc' },
@@ -77,66 +84,82 @@ async function getProjectsWithLatestAudit(): Promise<Project[]> {
 
 export default async function DashboardPage() {
   const projects = await getProjectsWithLatestAudit();
-  
+  const cardStyle = {
+    background: 'linear-gradient(180deg, rgba(18, 24, 38, 0.98), rgba(10, 14, 22, 0.98))',
+    border: '1px solid rgba(148, 163, 184, 0.18)',
+    borderRadius: '24px',
+    boxShadow: '0 24px 80px rgba(0, 0, 0, 0.35)',
+  } as const;
+
   return (
-    <div className="min-h-screen bg-black px-8 py-10">
-      <h1 className="text-4xl font-bold text-white mb-8">Project Audits</h1>
-      <div className="max-w-4xl mx-auto">
+    <main style={{ minHeight: '100vh', padding: '56px 24px 72px' }}>
+      <div style={{ margin: '0 auto', maxWidth: '1080px' }}>
+        <div style={{ marginBottom: '32px' }}>
+          <p style={{ color: 'rgba(184, 194, 215, 0.82)', fontSize: '0.78rem', letterSpacing: '0.22em', margin: 0, textTransform: 'uppercase' }}>
+            Internal tool
+          </p>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.4rem, 4vw, 4rem)', fontWeight: 600, letterSpacing: '-0.03em', margin: '10px 0 12px' }}>
+            Project status dashboard
+          </h1>
+          <p style={{ color: 'var(--muted)', fontSize: '1rem', lineHeight: 1.7, margin: 0, maxWidth: '720px' }}>
+            Monitor repository health, audit activity, and next actions across configured projects in a dark-only workspace.
+          </p>
+        </div>
+
         {projects.length === 0 ? (
-          <div className="text-white text-center py-8">
-            <p>No projects found. Add projects via the API to get started.</p>
-          </div>
+          <section style={{ ...cardStyle, padding: '32px' }}>
+            <div style={{ background: 'rgba(74, 90, 122, 0.18)', border: '1px solid rgba(74, 90, 122, 0.4)', borderRadius: '999px', color: '#d7e0f2', display: 'inline-flex', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '18px', padding: '8px 12px', textTransform: 'uppercase' }}>
+              No configured projects
+            </div>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.7rem', margin: '0 0 12px' }}>
+              Start with configuration, not a crash.
+            </h2>
+            <p style={{ color: 'var(--muted)', lineHeight: 1.7, margin: '0 0 14px', maxWidth: '720px' }}>
+              MyBoss is ready, but there are no projects in the database yet. Add a project through the ingest API or seed data, then return here to review project and repository status.
+            </p>
+            <p style={{ color: 'var(--soft)', lineHeight: 1.7, margin: 0 }}>
+              Required environment: <code>DATABASE_URL</code> and <code>DASHBOARD_TOKEN</code>. If your audit runner needs a specific callback endpoint, set <code>INGEST_URL</code> to any reachable internal, local, or public URL.
+            </p>
+          </section>
         ) : (
-          projects.map((project: Project) => (
-            <Link key={project.id} href={`/dashboard/${project.slug}`} className="block hover:scale-[1.01] transition-transform">
-              <div className="bg-gray-900 rounded-lg p-6 mb-4 border border-gray-700">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h2 className="text-xl font-semibold text-white">{project.name}</h2>
-                    <p className="text-gray-400 text-sm">/{project.slug}</p>
-                  </div>
-                  {project.latestAudit && (
-                    <div className="text-right">
-                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        project.latestAudit.status === 'completed' ? 'bg-green-900 text-green-200' :
-                        project.latestAudit.status === 'failed' ? 'bg-red-900 text-red-200' :
-                        'bg-yellow-900 text-yellow-200'
-                      }`}>
-                        {project.latestAudit.status}
-                      </div>
-                      <p className="text-gray-400 text-xs mt-1">
-                        {new Date(project.latestAudit.startedAt).toLocaleDateString()}
-                      </p>
+          <div style={{ display: 'grid', gap: '20px' }}>
+            {projects.map((project: Project) => (
+              <Link key={project.id} href={`/dashboard/${project.slug}`}>
+                <article style={{ ...cardStyle, padding: '28px' }}>
+                  <div style={{ alignItems: 'flex-start', display: 'flex', gap: '16px', justifyContent: 'space-between', marginBottom: '18px' }}>
+                    <div>
+                      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', margin: '0 0 6px' }}>{project.name}</h2>
+                      <p style={{ color: 'var(--soft)', fontSize: '0.95rem', margin: 0 }}>/{project.slug}</p>
                     </div>
-                  )}
-                </div>
-                <div className="flex gap-4 text-sm">
-                  <span className="text-gray-300">
-                    Repos: <span className="text-blue-400">{project.repos.length}</span>
-                  </span>
-                  {project.latestAudit && (
-                    <>
-                      <span className="text-gray-300">
-                        Findings: <span className="text-yellow-400">{project.latestAudit.findingsCount}</span>
-                      </span>
-                      {project.latestAudit.p0Count > 0 && (
-                        <span className="text-gray-300">
-                          Critical: <span className="text-red-400">{project.latestAudit.p0Count}</span>
-                        </span>
-                      )}
-                      {project.latestAudit.p1Count > 0 && (
-                        <span className="text-gray-300">
-                          High: <span className="text-orange-400">{project.latestAudit.p1Count}</span>
-                        </span>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            </Link>
-          ))
+                    <div style={{ alignItems: 'center', background: 'rgba(74, 90, 122, 0.18)', border: '1px solid rgba(74, 90, 122, 0.4)', borderRadius: '999px', color: '#dbe5f8', display: 'inline-flex', fontSize: '0.8rem', fontWeight: 600, minHeight: '36px', padding: '0 14px', textTransform: 'capitalize', whiteSpace: 'nowrap' }}>
+                      {project.latestAudit?.status || 'No audit yet'}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '16px' }}>
+                    <span style={{ background: 'rgba(74, 90, 122, 0.18)', borderRadius: '999px', color: '#d7e0f2', fontSize: '0.82rem', padding: '8px 12px' }}>
+                      Repos: {project.repos.length}
+                    </span>
+                    <span style={{ background: 'rgba(74, 90, 122, 0.18)', borderRadius: '999px', color: '#d7e0f2', fontSize: '0.82rem', padding: '8px 12px' }}>
+                      Findings: {project.latestAudit?.findingsCount ?? 0}
+                    </span>
+                    <span style={{ background: 'rgba(74, 90, 122, 0.18)', borderRadius: '999px', color: '#d7e0f2', fontSize: '0.82rem', padding: '8px 12px' }}>
+                      Critical: {project.latestAudit?.p0Count ?? 0}
+                    </span>
+                    <span style={{ background: 'rgba(74, 90, 122, 0.18)', borderRadius: '999px', color: '#d7e0f2', fontSize: '0.82rem', padding: '8px 12px' }}>
+                      High: {project.latestAudit?.p1Count ?? 0}
+                    </span>
+                  </div>
+                  <p style={{ color: 'var(--muted)', lineHeight: 1.7, margin: 0 }}>
+                    {project.repos.length === 0
+                      ? 'This project exists, but it does not have any repositories configured yet.'
+                      : `Latest audit: ${project.latestAudit ? new Date(project.latestAudit.startedAt).toLocaleString() : 'No audit data yet.'}`}
+                  </p>
+                </article>
+              </Link>
+            ))}
+          </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }
